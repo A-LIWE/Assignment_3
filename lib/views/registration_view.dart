@@ -1,7 +1,57 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
-class RegistrationView extends StatelessWidget {
+class RegistrationView extends StatefulWidget {
   const RegistrationView({super.key});
+
+  @override
+  State<RegistrationView> createState() => _RegistrationViewState();
+}
+
+class _RegistrationViewState extends State<RegistrationView> {
+  final TextEditingController nameController = TextEditingController();
+  final TextEditingController personalNumberController = TextEditingController();
+
+  Future<void> _register() async {
+    final String name = nameController.text.trim();
+    final String personalNumber = personalNumberController.text.trim();
+
+    if (name.isEmpty || personalNumber.isEmpty) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Fyll i alla fält")),
+      );
+      return;
+    }
+
+    try {
+      final response = await Supabase.instance.client
+          .from('persons')
+          .insert({'name': name, 'personal_number': personalNumber})
+          .select();
+
+      if (!mounted) return;
+    
+    if ((response.isEmpty)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Registrering misslyckades")),
+      );
+      
+       } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Registrering lyckades")),
+      );
+      // Navigera tillbaka eller vidare, beroende på din logik
+      Navigator.pop(context);
+    }
+  } catch (error) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text("Fel vid registrering: $error"), duration: const Duration(seconds: 40),),
+      
+    );
+  }
+}
 
   @override
   Widget build(BuildContext context) {
@@ -16,34 +66,24 @@ class RegistrationView extends StatelessWidget {
           children: [
             // Namnfält
             TextField(
+              controller: nameController,
               decoration: const InputDecoration(
                 labelText: 'Fullständigt namn',
                 border: OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 16),
-            // Emailfält
+            // Personnummerfält
             TextField(
+              controller: personalNumberController,
               decoration: const InputDecoration(
-                labelText: 'Email',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 16),
-            // Lösenordsfält
-            TextField(
-              obscureText: true,
-              decoration: const InputDecoration(
-                labelText: 'Lösenord',
+                labelText: 'Personnummer',
                 border: OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 24),
-            // Registreringsknapp
             ElevatedButton(
-              onPressed: () {
-                // Registreringslogik här
-              },
+              onPressed: _register,
               child: const Text('Registrera'),
             ),
           ],

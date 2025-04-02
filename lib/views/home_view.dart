@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-
-void main() => runApp(const HomeView());
+import 'vehicles_view.dart';
+import 'start_parking_view.dart';
+import 'manage_parkings_view.dart';
 
 class HomeView extends StatelessWidget {
   const HomeView({super.key});
@@ -9,24 +10,23 @@ class HomeView extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       theme: ThemeData(useMaterial3: true),
-      home: const NavigationExample(),
+      home: const NavigationMenu(),
     );
   }
 }
 
-class NavigationExample extends StatefulWidget {
-  const NavigationExample({super.key});
+class NavigationMenu extends StatefulWidget {
+  const NavigationMenu({super.key});
 
   @override
-  State<NavigationExample> createState() => _NavigationExampleState();
+  State<NavigationMenu> createState() => _NavigationMenuState();
 }
 
-class _NavigationExampleState extends State<NavigationExample> {
+class _NavigationMenuState extends State<NavigationMenu> {
   int currentPageIndex = 0;
 
   @override
   Widget build(BuildContext context) {
-    final ThemeData theme = Theme.of(context);
     return Scaffold(
       bottomNavigationBar: NavigationBar(
         onDestinationSelected: (int index) {
@@ -55,27 +55,9 @@ class _NavigationExampleState extends State<NavigationExample> {
         ],
       ),
       body: <Widget>[
-        // Fordonshantering vy
-        Center(
-          child: Text(
-            'Fordonshantering',
-            style: theme.textTheme.titleLarge,
-          ),
-        ),
-        // Starta parkering vy
-        Center(
-          child: Text(
-            'Starta parkering',
-            style: theme.textTheme.titleLarge,
-          ),
-        ),
-        // Aktiva parkeringar vy
-        Center(
-          child: Text(
-            'Aktiva parkeringar',
-            style: theme.textTheme.titleLarge,
-          ),
-        ),
+        const VehiclesView(),
+        const StartParkingView(),
+        const ManageParkingsView(),
       ][currentPageIndex],
     );
   }
