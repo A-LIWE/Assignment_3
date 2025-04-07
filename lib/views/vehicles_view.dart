@@ -1,80 +1,85 @@
 import 'package:flutter/material.dart';
+import 'package:parking_user/repositories/repositories.dart';
+import 'package:logger/logger.dart';
+import 'package:parking_user/models/models.dart';
+
+
+final logger = Logger();
 
 class VehiclesView extends StatefulWidget {
-  const VehiclesView({super.key});
+  const VehiclesView({super.key, required this.userPersonalNumber});
+
+  final String userPersonalNumber;
+  
 
   @override
   State<VehiclesView> createState() => _VehiclesViewState();
 }
 
 class _VehiclesViewState extends State<VehiclesView> {
-  // Temporär lista med fordon. Vid senare integration med Supabase hämtar du datan härifrån.
-  List<String> vehicles = ['Volvo XC90', 'Audi A4', 'BMW 3 Series'];
+  List<Vehicle> vehicles = [];
+  bool isLoading = false;
 
-  // Metod för att lägga till ett nytt fordon
-  void addVehicle(String vehicle) {
-    setState(() {
-      vehicles.add(vehicle);
-    });
+  @override
+  void initState() {
+    super.initState();
+    debugPrint('widget.userId: ${widget.userPersonalNumber}');
+    _fetchVehicles();
   }
 
-  // Metod för att redigera ett fordon
-  void editVehicle(int index, String newVehicle) {
-    setState(() {
-      vehicles[index] = newVehicle;
-    });
-  }
+  Future<void> _fetchVehicles() async {
+  setState(() {
+    isLoading = true;
+  });
+  try {
+    // Skapa en instans av VehicleRepository
+    final vehicleRepo = VehicleRepository();
+    final data = await vehicleRepo.getAll(); // data är en lista med fordon
+   // Filtrera fordon baserat på personnummer
+    final filteredVehicles = data.where((v) => v.owner?.personalNumber == widget.userPersonalNumber).toList();
 
-  // Metod för att radera ett fordon
-  void deleteVehicle(int index) {
-    setState(() {
-      vehicles.removeAt(index);
-    });
+    if (!mounted) return;
+
+    if (data.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Inga fordon hittades")),
+      );
+    } else {
+      setState(() {
+        vehicles = filteredVehicles;
+      });
+    }
+  } catch (error, stackTrace) {
+    logger.e("Fel vid hämtning av fordon", error: error, stackTrace: stackTrace);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text("Fel vid hämtning av fordon: $error")),
+  );
   }
+  setState(() {
+    isLoading = false;
+  });
+}
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Fordonshantering'),
+        title: const Text('Mina fordon'),
       ),
-      body: ListView.builder(
-        itemCount: vehicles.length,
-        itemBuilder: (context, index) {
-          return ListTile(
-            title: Text(vehicles[index]),
-            trailing: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Knapp för att redigera fordonet
-                IconButton(
-                  icon: const Icon(Icons.edit),
-                  onPressed: () {
-                    // Här kan du öppna en dialog eller navigera till en redigeringssida
-                    // För demoändamål redigerar vi fordonets namn direkt
-                    editVehicle(index, '${vehicles[index]} (Redigerat)');
-                  },
-                ),
-                // Knapp för att radera fordonet
-                IconButton(
-                  icon: const Icon(Icons.delete),
-                  onPressed: () {
-                    deleteVehicle(index);
-                  },
-                ),
-              ],
+      body: isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : ListView.builder(
+              itemCount: vehicles.length,
+              itemBuilder: (context, index) {
+                final vehicle = vehicles[index];
+                final registrationNumber = vehicle.registrationNumber;
+                final vehicleType = vehicle.vehicleType;
+                return ListTile(
+                  title: Text(registrationNumber),
+                  subtitle: Text(vehicleType),
+                );
+              },
             ),
-          );
-        },
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // Här kan du öppna en dialog eller navigera till en sida för att lägga till ett nytt fordon
-          // För demoändamål lägger vi till ett nytt fordon med ett genererat namn
-          addVehicle('Nytt Fordon ${vehicles.length + 1}');
-        },
-        child: const Icon(Icons.add),
-      ),
     );
   }
 }
