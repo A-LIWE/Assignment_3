@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'login_view.dart';
 
 class ManageParkingsView extends StatefulWidget {
   const ManageParkingsView({super.key});
@@ -64,79 +65,87 @@ class _ManageParkingsViewState extends State<ManageParkingsView> {
         title: const Text('Aktiva parkeringar'),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Rubrik för aktiva parkeringar
-            //Text(
-             // 'Aktiva parkeringar',
-             // style: theme.textTheme.titleLarge,
-            //),
-            const SizedBox(height: 8.0),
-            activeParkings.isEmpty
-                ? const Text('Inga aktiva parkeringar.')
-                : ListView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: activeParkings.length,
-                    itemBuilder: (context, index) {
-                      final parking = activeParkings[index];
-                      return Card(
-                        margin: const EdgeInsets.symmetric(vertical: 4.0),
-                        child: ListTile(
-                          title: Text(
-                              '${parking['parkingSpace']} - ${parking['vehicle']}'),
-                          subtitle:
-                              Text('Starttid: ${parking['startTime']}'),
-                          trailing: ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.red,
-                            ),
-                            onPressed: () {
-                              _endParking(parking['id']!);
-                            },
-                            child: const Text('Avsluta'),
+  padding: const EdgeInsets.all(16.0),
+  child: Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+          const SizedBox(height: 8.0),
+          activeParkings.isEmpty
+              ? const Text('Inga aktiva parkeringar.')
+              : ListView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: activeParkings.length,
+                  itemBuilder: (context, index) {
+                    final parking = activeParkings[index];
+                    return Card(
+                      margin: const EdgeInsets.symmetric(vertical: 4.0),
+                      child: ListTile(
+                        title: Text(
+                            '${parking['parkingSpace']} - ${parking['vehicle']}'),
+                        subtitle:
+                            Text('Starttid: ${parking['startTime']}'),
+                        trailing: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.red,
                           ),
+                          onPressed: () {
+                            _endParking(parking['id']!);
+                          },
+                          child: const Text('Avsluta'),
                         ),
-                      );
-                    },
-                  ),
-            const SizedBox(height: 24.0),
-            // Rubrik för historik
-            Text(
-              'Historik',
-              style: theme.textTheme.titleLarge,
-            ),
-            const SizedBox(height: 8.0),
-            historicalParkings.isEmpty
-                ? const Text('Ingen historik tillgänglig.')
-                : ListView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: historicalParkings.length,
-                    itemBuilder: (context, index) {
-                      final parking = historicalParkings[index];
-                      return Card(
-                        margin: const EdgeInsets.symmetric(vertical: 4.0),
-                        child: ListTile(
-                          title: Text(
-                              '${parking['parkingSpace']} - ${parking['vehicle']}'),
-                          subtitle: Text(
-                              'Starttid: ${parking['startTime']}\nSluttid: ${parking['endTime']}'),
-                          trailing: IconButton(
-                            icon: const Icon(Icons.delete),
-                            onPressed: () {
-                              _deleteHistoricalParking(parking['id']!);
-                            },
-                          ),
+                      ),
+                    );
+                  },
+                ),
+          const SizedBox(height: 24.0),
+          // Rubrik för historik
+          Text(
+            'Historik',
+            style: theme.textTheme.titleLarge,
+          ),
+          const SizedBox(height: 8.0),
+          historicalParkings.isEmpty
+              ? const Text('Ingen historik tillgänglig.')
+              : ListView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: historicalParkings.length,
+                  itemBuilder: (context, index) {
+                    final parking = historicalParkings[index];
+                    return Card(
+                      margin: const EdgeInsets.symmetric(vertical: 4.0),
+                      child: ListTile(
+                        title: Text(
+                            '${parking['parkingSpace']} - ${parking['vehicle']}'),
+                        subtitle: Text(
+                            'Starttid: ${parking['startTime']}\nSluttid: ${parking['endTime']}'),
+                        trailing: IconButton(
+                          icon: const Icon(Icons.delete),
+                          onPressed: () {
+                            _deleteHistoricalParking(parking['id']!);
+                          },
                         ),
-                      );
-                    },
-                  ),
-          ],
+                      ),
+                    );
+                  },
+                ),
+                
+        const SizedBox(height: 325.0),
+      // Logga ut-knapp placerad i slutet av innehållet
+      Center(
+        child: ElevatedButton(
+          onPressed: () {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const LoginView()),
+            );
+          },
+          child: const Text('Logga ut'),
         ),
       ),
-    );
-  }
-}
+      const SizedBox(height: 24.0),
+    ],
+  ),
+  ));
+  }}
