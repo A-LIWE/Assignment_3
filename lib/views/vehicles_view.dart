@@ -88,62 +88,107 @@ class _VehiclesViewState extends State<VehiclesView> {
     }
   }
 
-  Future<void> _addVehicle() async {
+  Future<void> _addVehicle(BuildContext parentContext) async {
     String registrationNumber = "";
-    String vehicleType = "";
+    String? selectedVehicleType; // Detta kommer att uppdateras via dropdownen.
+    final List<String> vehicleTypes = ['Bil', 'Motorcykel', 'Moped', 'Buss'];
+
+    final formKey = GlobalKey<FormState>();
 
     await showDialog(
       context: context,
-      builder: (BuildContext context) {
+      builder: (BuildContext dialogContext) {
         return AlertDialog(
           title: const Text("Lägg till nytt fordon"),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                decoration: const InputDecoration(
-                  labelText: "Registreringsnummer",
+          content: Form(
+            key: formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Registreringsnummer med validering
+                TextFormField(
+                  decoration: const InputDecoration(
+                    labelText: "Registreringsnummer",
+                  ),
+                  textCapitalization: TextCapitalization.characters,
+                  onChanged: (value) {
+                    registrationNumber = value;
+                  },
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return "Ange registreringsnummer";
+                    }
+                    // Omvandla till versaler för validering
+                    final normalized = value.toUpperCase();
+                    final regex = RegExp(r'^[A-Z]{3}\d{2}[A-Z0-9]$');
+                    if (!regex.hasMatch(normalized)) {
+                      return "Ogiltigt regnr Format: AAA99X";
+                    }
+                    return null;
+                  },
                 ),
-                onChanged: (value) {
-                  registrationNumber = value;
-                },
-              ),
-              TextField(
-                decoration: const InputDecoration(labelText: "Fordonstyp"),
-                onChanged: (value) {
-                  vehicleType = value;
-                },
-              ),
-            ],
+                const SizedBox(height: 16),
+                // Dropdown för fordonstyp
+                DropdownButtonFormField<String>(
+                  decoration: const InputDecoration(labelText: "Fordonstyp"),
+                  value: selectedVehicleType,
+                  items:
+                      vehicleTypes
+                          .map(
+                            (type) => DropdownMenuItem(
+                              value: type,
+                              child: Text(type),
+                            ),
+                          )
+                          .toList(),
+                  onChanged: (value) {
+                    selectedVehicleType = value;
+                  },
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return "Välj fordonstyp";
+                    }
+                    return null;
+                  },
+                ),
+              ],
+            ),
           ),
           actions: [
             TextButton(
-              onPressed: () {
-                Navigator.pop(context); // Avbryt dialogen
-              },
+              onPressed: () => Navigator.pop(dialogContext),
               child: const Text("Avbryt"),
             ),
             ElevatedButton(
               onPressed: () async {
-                Navigator.pop(context);
-                // Skapa ett nytt Vehicle-objekt.
-                // Om du har data om den inloggade personen, sätt den som ägare, annars kan du sätta owner till null.
+                // Kontrollera att formuläret är giltigt innan vi går vidare
+                if (!formKey.currentState!.validate()) {
+                  // Om det inte är giltigt, visas felmeddelandena direkt i fälten
+                  return;
+                }
+                Navigator.pop(dialogContext);
+                // Skapa ägaren med den inloggade användarens uppgifter
                 final owner = Person(
                   widget.userName,
                   widget.userPersonalNumber,
                 );
+                // Skapa ett nytt Vehicle-objekt med inmatade data
                 final newVehicle = Vehicle(
                   registrationNumber,
-                  vehicleType,
+                  selectedVehicleType!,
                   owner,
                 );
-
-                // Skapa en instans av VehicleRepository och lägg till fordonet
+                // Anropa repository-metoden för att lägga till fordonet
                 final vehicleRepo = VehicleRepository();
-                await vehicleRepo.add(newVehicle);
-
-                // Uppdatera listan med fordon (du kan anropa din _fetchVehicles-metod)
-                _fetchVehicles();
+                try {
+                  await vehicleRepo.add(newVehicle);
+                  _fetchVehicles(); // Uppdatera listan med fordon
+                } catch (error) {
+                  // Här visas felmeddelandet från repositoryt direkt
+                  ScaffoldMessenger.of(
+                    context,
+                  ).showSnackBar(SnackBar(content: Text(error.toString())));
+                }
               },
               child: const Text("Lägg till"),
             ),
@@ -228,19 +273,21 @@ class _VehiclesViewState extends State<VehiclesView> {
                 },
               ),
       floatingActionButton: FloatingActionButton.extended(
-  onPressed: _addVehicle,
-  label: Row(
-    mainAxisSize: MainAxisSize.min,
-    children: const [
-      Text(
-        'Lägg till fordon',
-        style: TextStyle(fontSize: 15), // justera textstorlek här
+        onPressed: () async {
+          await _addVehicle(context);
+        },
+        label: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: const [
+            Text(
+              'Lägg till fordon',
+              style: TextStyle(fontSize: 15), // justera textstorlek här
+            ),
+            SizedBox(width: 8),
+            Icon(Icons.add),
+          ],
+        ),
       ),
-      SizedBox(width: 8),
-      Icon(Icons.add),
-    ],
-  ),
-),
     );
   }
 }

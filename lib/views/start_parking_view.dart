@@ -1,15 +1,11 @@
-//import 'package:logger/logger.dar';
 import 'package:flutter/material.dart';
-//import 'package:intl/intl.dart';
 import 'package:parking_user/repositories/repositories.dart';
 import 'package:parking_user/models/models.dart';
 import 'package:parking_user/views/vehicles_view.dart';
 
-
 class StartParkingView extends StatefulWidget {
   const StartParkingView({super.key, required this.userPersonalNumber, required this.userName});
 
-  // Vi antar här att du skickar med den inloggade användarens personalnummer samt namn.
   final String userPersonalNumber;
   final String userName;
 
@@ -20,10 +16,11 @@ class StartParkingView extends StatefulWidget {
 class _StartParkingViewState extends State<StartParkingView> {
   bool isLoading = false;
   List<ParkingSpace> parkingSpaces = [];
-  List <Vehicle> vehicles = [];
-
+  List<ParkingSpace> filteredParkingSpaces = [];
+  List<Vehicle> vehicles = [];
   ParkingSpace? selectedSpace;
   Vehicle? selectedVehicle;
+  String searchQuery = "";
 
   @override
   void initState() {
@@ -37,20 +34,16 @@ class _StartParkingViewState extends State<StartParkingView> {
       isLoading = true;
     });
     try {
-      // Här hämtar vi parkeringsplatser via din repository-metod
       final parkingSpaceRepo = ParkingSpaceRepository();
-      final data =
-          await parkingSpaceRepo
-              .getAll(); // data är en lista med ParkingSpace-objekt
+      final data = await parkingSpaceRepo.getAll();
       setState(() {
         parkingSpaces = data;
+        filteredParkingSpaces = List.from(parkingSpaces);
       });
     } catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text("Fel vid hämtning av parkeringsplatser: $error"),
-        ),
+        SnackBar(content: Text("Fel vid hämtning av parkeringsplatser: $error")),
       );
     }
     if (!mounted) return;
@@ -64,40 +57,44 @@ class _StartParkingViewState extends State<StartParkingView> {
       isLoading = true;
     });
     try {
-      // Skapa en instans av VehicleRepository
       final vehicleRepo = VehicleRepository();
-      final data = await vehicleRepo.getAll(); // data är en lista med fordon
-      // Filtrera fordon baserat på personnummer
-      final filteredVehicles =
-          data
-              .where(
-                (v) => v.owner?.personalNumber == widget.userPersonalNumber,
-              )
-              .toList();
-
+      final data = await vehicleRepo.getAll();
+      // Filtrera fordon baserat på personalnummer
+      final filteredVehicles = data
+          .where((v) => v.owner?.personalNumber == widget.userPersonalNumber)
+          .toList();
       if (!mounted) return;
-
       if (data.isEmpty) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text("Inga fordon hittades")));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Inga fordon hittades")),
+        );
       } else {
         setState(() {
           vehicles = filteredVehicles;
         });
       }
     } catch (error, stackTrace) {
-      logger.e(
-        "Fel vid hämtning av fordon",
-        error: error,
-        stackTrace: stackTrace,
-      );
+      logger.e("Fel vid hämtning av fordon", error: error, stackTrace: stackTrace);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Fel vid hämtning av fordon: $error")),
       );
     }
     setState(() {
       isLoading = false;
+    });
+  }
+
+  // Metod för att filtrera parkeringsplatser baserat på sökfråga (adress)
+  void _filterParkingSpaces(String query) {
+    setState(() {
+      searchQuery = query;
+      if (query.isEmpty) {
+        filteredParkingSpaces = List.from(parkingSpaces);
+      } else {
+        filteredParkingSpaces = parkingSpaces.where((space) {
+          return space.address.toLowerCase().contains(query.toLowerCase());
+        }).toList();
+      }
     });
   }
 
@@ -109,17 +106,16 @@ class _StartParkingViewState extends State<StartParkingView> {
       return;
     }
     final startTime = DateTime.now();
-
     // Skapa en ny ParkingSession med vald parkeringsplats, valt fordon och aktuell tid
     final newSession = ParkingSession(selectedVehicle!, selectedSpace!, startTime);
-
     try {
       await ParkingSessionRepository().add(newSession);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Parkering startad kl ${startTime.hour}:${startTime.minute.toString().padLeft(2, '0')}")),
+        SnackBar(
+          content: Text("Parkering startad kl ${startTime.hour}:${startTime.minute.toString().padLeft(2, '0')}"),
+        ),
       );
-      // Optionellt: återställ val eller navigera vidare
       setState(() {
         selectedSpace = null;
         selectedVehicle = null;
@@ -145,6 +141,18 @@ class _StartParkingViewState extends State<StartParkingView> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Sökfält
+                  TextField(
+                    decoration: const InputDecoration(
+                      labelText: "Sök på adress",
+                      prefixIcon: Icon(Icons.search),
+                      border: OutlineInputBorder(),
+                    ),
+                    onChanged: (value) {
+                      _filterParkingSpaces(value);
+                    },
+                  ),
+                  const SizedBox(height: 8),
                   const Text(
                     "Välj en ledig parkeringsplats:",
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
@@ -153,10 +161,10 @@ class _StartParkingViewState extends State<StartParkingView> {
                   ListView.separated(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
-                    itemCount: parkingSpaces.length,
+                    itemCount: filteredParkingSpaces.length,
                     separatorBuilder: (context, index) => const Divider(),
                     itemBuilder: (context, index) {
-                      final space = parkingSpaces[index];
+                      final space = filteredParkingSpaces[index];
                       return ListTile(
                         title: Text(
                           space.address,

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'login_view.dart';
+import 'package:parking_user/models/models.dart';
+import 'package:parking_user/repositories/repositories.dart';
 
 class ManageParkingsView extends StatefulWidget {
   const ManageParkingsView({super.key});
@@ -9,143 +11,192 @@ class ManageParkingsView extends StatefulWidget {
 }
 
 class _ManageParkingsViewState extends State<ManageParkingsView> {
-  // Dummy-data för aktiva parkeringar. Varje parkering representeras som en Map med unikt id, parkeringsplats, fordon och starttid.
-  List<Map<String, String>> activeParkings = [
-    {
-      'id': '1',
-      'parkingSpace': 'Parkeringsplats A',
-      'vehicle': 'Volvo XC90',
-      'startTime': '2023-04-01 08:00'
-    },
-    {
-      'id': '2',
-      'parkingSpace': 'Parkeringsplats B',
-      'vehicle': 'Audi A4',
-      'startTime': '2023-04-01 08:15'
-    },
-  ];
-
-  // Dummy-data för historik (avslutade parkeringar)
-  List<Map<String, String>> historicalParkings = [
-    {
-      'id': '3',
-      'parkingSpace': 'Parkeringsplats C',
-      'vehicle': 'BMW 3 Series',
-      'startTime': '2023-03-31 10:00',
-      'endTime': '2023-03-31 11:30'
-    },
-  ];
-
-  // Metod för att avsluta en aktiv parkering
-  void _endParking(String id) {
-    setState(() {
-      // Hitta parkeringen i aktiva listan och ta bort den
-      final index = activeParkings.indexWhere((element) => element['id'] == id);
-      if (index != -1) {
-        final endedParking = activeParkings.removeAt(index);
-        // Lägg till sluttid, här används DateTime.now() för demoändamål
-        endedParking['endTime'] = DateTime.now().toString().substring(0, 16);
-        historicalParkings.add(endedParking);
-      }
-    });
-  }
-
-  // Metod för att radera en historisk parkering
-  void _deleteHistoricalParking(String id) {
-    setState(() {
-      historicalParkings.removeWhere((element) => element['id'] == id);
-    });
-  }
+  bool isLoading = false;
+  List<ParkingSession> activeSessions = [];
+  List<ParkingSession> historicalSessions = [];
 
   @override
+  void initState() {
+    super.initState();
+    _fetchParkingSessions();
+  }
+
+  Future<void> _fetchParkingSessions() async {
+    setState(() {
+      isLoading = true;
+    });
+    try {
+      final sessionRepo = ParkingSessionRepository();
+      final sessions = await sessionRepo.getAll(); // Förväntas ge List<ParkingSession>
+      // Dela upp sessionerna: aktiva där endTime är null, historiska där endTime finns
+      final actives = sessions.where((s) => s.endTime == null).toList();
+      final historicals = sessions.where((s) => s.endTime != null).toList();
+
+      if (!mounted) return;
+      setState(() {
+        activeSessions = actives;
+        historicalSessions = historicals;
+      });
+
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Fel vid hämtning av parkeringar: $error")),
+      );
+    }
+    if (!mounted) return;
+    setState(() {
+      isLoading = false;
+    });
+  }
+
+  /// Avslutar en aktiv parkeringssession genom att sätta endTime till nuvarande tid.
+  Future<void> _endParking(ParkingSession session) async {
+  try {
+    // Sätt sluttiden till nu
+    session.endTime = DateTime.now();
+    final sessionRepo = ParkingSessionRepository();
+    // Anropa update och skicka session.uuid och session.endTime
+    await sessionRepo.update(session.vehicle.registrationNumber, newEndTime: DateTime.now());
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text("Parkering avslutad för ${session.vehicle.registrationNumber}"),
+      ),
+    );
+    _fetchParkingSessions(); // Uppdatera listan
+  } catch (error) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text("Fel vid avslut av parkering: $error")),
+    );
+  }
+}
+
+  /// Raderar en historisk parkeringssession baserat på dess uuid.
+  Future<void> _deleteHistoricalSession(String regNum) async {
+    try {
+      final sessionRepo = ParkingSessionRepository();
+      await sessionRepo.delete(regNum);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Parkering raderad")),
+      );
+      _fetchParkingSessions();
+    } catch (error) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Fel vid radering: $error")),
+      );
+    }
+  }
+
+   @override
   Widget build(BuildContext context) {
-    final ThemeData theme = Theme.of(context);
+    final theme = Theme.of(context);
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Aktiva parkeringar'),
+        title: const Text('Hantera parkeringar'),
       ),
-      body: SingleChildScrollView(
-  padding: const EdgeInsets.all(16.0),
-  child: Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-          const SizedBox(height: 8.0),
-          activeParkings.isEmpty
-              ? const Text('Inga aktiva parkeringar.')
-              : ListView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: activeParkings.length,
-                  itemBuilder: (context, index) {
-                    final parking = activeParkings[index];
-                    return Card(
-                      margin: const EdgeInsets.symmetric(vertical: 4.0),
-                      child: ListTile(
-                        title: Text(
-                            '${parking['parkingSpace']} - ${parking['vehicle']}'),
-                        subtitle:
-                            Text('Starttid: ${parking['startTime']}'),
-                        trailing: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.red,
-                          ),
-                          onPressed: () {
-                            _endParking(parking['id']!);
-                          },
-                          child: const Text('Avsluta'),
-                        ),
-                      ),
-                    );
-                  },
-                ),
-          const SizedBox(height: 24.0),
-          // Rubrik för historik
-          Text(
-            'Historik',
-            style: theme.textTheme.titleLarge,
-          ),
-          const SizedBox(height: 8.0),
-          historicalParkings.isEmpty
-              ? const Text('Ingen historik tillgänglig.')
-              : ListView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: historicalParkings.length,
-                  itemBuilder: (context, index) {
-                    final parking = historicalParkings[index];
-                    return Card(
-                      margin: const EdgeInsets.symmetric(vertical: 4.0),
-                      child: ListTile(
-                        title: Text(
-                            '${parking['parkingSpace']} - ${parking['vehicle']}'),
-                        subtitle: Text(
-                            'Starttid: ${parking['startTime']}\nSluttid: ${parking['endTime']}'),
-                        trailing: IconButton(
-                          icon: const Icon(Icons.delete),
-                          onPressed: () {
-                            _deleteHistoricalParking(parking['id']!);
+      body: isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : SingleChildScrollView(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Sektion: Aktiva parkeringar
+                  const Text(
+                    "Aktiva parkeringar",
+                    style:
+                        TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 8),
+                  activeSessions.isEmpty
+                      ? const Text("Inga aktiva parkeringar hittades.")
+                      : ListView.separated(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          itemCount: activeSessions.length,
+                          separatorBuilder: (context, index) =>
+                              const Divider(),
+                          itemBuilder: (context, index) {
+                            final session = activeSessions[index];
+                            return Card(
+                              margin:
+                                  const EdgeInsets.symmetric(vertical: 4.0),
+                              child: ListTile(
+                                title: Text(
+                                  '${session.parkingSpace.address} - ${session.vehicle.registrationNumber}',
+                                  style: const TextStyle(fontSize: 18),
+                                ),
+                                subtitle: Text(
+                                  'Starttid: ${session.formattedStartTime.toString()}',
+                                ),
+                                trailing: ElevatedButton(
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.red,
+                                  ),
+                                  onPressed: () => _endParking(session),
+                                  child: const Text("Avsluta"),
+                                ),
+                              ),
+                            );
                           },
                         ),
-                      ),
-                    );
-                  },
-                ),
-                
-        const SizedBox(height: 325.0),
-      // Logga ut-knapp placerad i slutet av innehållet
-      Center(
-        child: ElevatedButton(
-          onPressed: () {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (context) => const LoginView()),
-            );
-          },
-          child: const Text('Logga ut'),
-        ),
-      ),
-      const SizedBox(height: 24.0),
-    ],
-  ),
-  ));
-  }}
+                  const SizedBox(height: 24),
+                  // Sektion: Historik
+                  Text(
+                    "Historik",
+                    style: theme.textTheme.titleLarge,
+                  ),
+                  const SizedBox(height: 8),
+                  historicalSessions.isEmpty
+                      ? const Text("Ingen historik tillgänglig.")
+                      : ListView.separated(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          itemCount: historicalSessions.length,
+                          separatorBuilder: (context, index) =>
+                              const Divider(),
+                          itemBuilder: (context, index) {
+                            final session = historicalSessions[index];
+                            return Card(
+                              margin:
+                                  const EdgeInsets.symmetric(vertical: 4.0),
+                              child: ListTile(
+                                title: Text(
+                                  '${session.parkingSpace.address} - ${session.vehicle.registrationNumber}',
+                                  style: const TextStyle(fontSize: 18),
+                                ),
+                                subtitle: Text(
+                                  'Starttid: ${session.formattedStartTime}\nSluttid: ${session.formattedEndTime}',
+                                ),
+                                trailing: IconButton(
+                                  icon: const Icon(Icons.delete),
+                                  onPressed: () =>
+                                      _deleteHistoricalSession(session.vehicle.registrationNumber),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                  const SizedBox(height: 80),
+                  // Logga ut-knapp (kan eventuellt flyttas nedåt eller lämnas i bottomNavigationBar)
+                  Center(
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => const LoginView()),
+                        );
+                      },
+                      child: const Text("Logga ut"),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                ],
+              ),
+            ),
+    );
+  }
+}

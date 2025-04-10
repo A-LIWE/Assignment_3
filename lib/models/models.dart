@@ -1,3 +1,4 @@
+import 'package:intl/intl.dart';
 import 'package:uuid/uuid.dart';
 
 class Person {
@@ -8,15 +9,12 @@ class Person {
   Person(this.name, this.personalNumber) : uuid = Uuid().v4();
 
   Map<String, dynamic> toJson() => {
-        'name': name,
-        'personal_number': personalNumber,
-      };
+    'name': name,
+    'personal_number': personalNumber,
+  };
 
   factory Person.fromJson(Map<String, dynamic> json) {
-    return Person(
-      json['name'],
-      json['personal_number'],
-    );
+    return Person(json['name'], json['personal_number']);
   }
 
   @override
@@ -43,15 +41,15 @@ class Vehicle {
   Person? owner;
 
   Vehicle(String registrationNumber, String vehicleType, this.owner)
-      : registrationNumber = registrationNumber.toUpperCase(),
-        vehicleType = vehicleType.toUpperCase(),
-        uuid = Uuid().v4();
+    : registrationNumber = registrationNumber.toUpperCase(),
+      vehicleType = vehicleType.toUpperCase(),
+      uuid = Uuid().v4();
 
   Map<String, dynamic> toJson() => {
-        'registration_number': registrationNumber,
-        'vehicle_type': vehicleType,
-        if (owner != null) 'owner': owner!.toJson(),
-      };
+    'registration_number': registrationNumber,
+    'vehicle_type': vehicleType,
+    if (owner != null) 'owner': owner!.toJson(),
+  };
 
   factory Vehicle.fromJson(Map<String, dynamic> json) {
     final ownerJson = json['owner'];
@@ -63,11 +61,7 @@ class Vehicle {
       person = null;
     }
 
-    return Vehicle(
-      json['registration_number'],
-      json['vehicle_type'],
-      person,
-    );
+    return Vehicle(json['registration_number'], json['vehicle_type'], person);
   }
 
   @override
@@ -81,10 +75,10 @@ class Vehicle {
   }
 
   bool _isValidRegistrationNumber() {
-  final normalized = registrationNumber.toUpperCase();
-  final regex = RegExp(r'^[A-Z]{3}\d{2}[A-Z0-9]$');
-  return regex.hasMatch(normalized);
-}
+    final normalized = registrationNumber.toUpperCase();
+    final regex = RegExp(r'^[A-Z]{3}\d{2}[A-Z0-9]$');
+    return regex.hasMatch(normalized);
+  }
 
   bool _isValidVehicleType() {
     return vehicleType.isNotEmpty;
@@ -99,11 +93,7 @@ class ParkingSpace {
 
   ParkingSpace(this.id, this.address, this.pph) : uuid = Uuid().v4();
 
-  Map<String, dynamic> toJson() => {
-        'id': id,
-        'address': address,
-        'pph': pph,
-      };
+  Map<String, dynamic> toJson() => {'id': id, 'address': address, 'pph': pph};
 
   factory ParkingSpace.fromJson(Map<String, dynamic> json) {
     return ParkingSpace(
@@ -151,16 +141,29 @@ class ParkingSession {
   DateTime startTime;
   DateTime? endTime;
 
-  ParkingSession(this.vehicle, this.parkingSpace, this.startTime,
-      [this.endTime])
-      : uuid = Uuid().v4();
+  ParkingSession(
+    this.vehicle,
+    this.parkingSpace,
+    this.startTime, [
+    this.endTime,
+  ]) : uuid = Uuid().v4();
+
+  String get formattedStartTime {
+    final formatter = DateFormat('yyyy-MM-dd HH:mm');
+    return formatter.format(startTime);
+  }
+
+  String get formattedEndTime {
+    final formatter = DateFormat('yyyy-MM-dd HH:mm');
+    return endTime != null ? formatter.format(endTime!) : 'pågående';
+  }
 
   Map<String, dynamic> toJson() => {
-        'vehicle': vehicle.toJson(),
-        'parking_space': parkingSpace.toJson(),
-        'start_time': startTime.toIso8601String(),
-        'end_time': endTime?.toIso8601String(),
-      };
+    'vehicle': vehicle.toJson(),
+    'parking_space': parkingSpace.toJson(),
+    'start_time': startTime.toIso8601String(),
+    'end_time': endTime?.toIso8601String(),
+  };
 
   factory ParkingSession.fromJson(Map<String, dynamic> json) {
     if (json['vehicle'] == null || json['parking_space'] == null) {

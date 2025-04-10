@@ -130,7 +130,7 @@ class VehicleRepository {
         );
       }
     } catch (e) {
-      print('$e');
+      throw Exception(e.toString());
     }
   }
 
@@ -371,7 +371,7 @@ class ParkingSessionRepository {
 
     if (response.statusCode == 200) {
     } else {
-      throw Exception('❌ Misslyckades att uppdatera parkering.');
+      throw Exception('❌ Misslyckades att uppdatera parkering.Statuskod: ${response.statusCode}, svar: ${response.body}');
     }
   }
 
