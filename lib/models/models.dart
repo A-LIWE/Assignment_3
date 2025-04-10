@@ -42,8 +42,10 @@ class Vehicle {
   String vehicleType;
   Person? owner;
 
-  Vehicle(this.registrationNumber, this.vehicleType, this.owner)
-      : uuid = Uuid().v4();
+  Vehicle(String registrationNumber, String vehicleType, this.owner)
+      : registrationNumber = registrationNumber.toUpperCase(),
+        vehicleType = vehicleType.toUpperCase(),
+        uuid = Uuid().v4();
 
   Map<String, dynamic> toJson() => {
         'registration_number': registrationNumber,
@@ -79,9 +81,10 @@ class Vehicle {
   }
 
   bool _isValidRegistrationNumber() {
-    final regex = RegExp(r'^[A-Z]{3}\d{2}[A-Z0-9]$');
-    return regex.hasMatch(registrationNumber);
-  }
+  final normalized = registrationNumber.toUpperCase();
+  final regex = RegExp(r'^[A-Z]{3}\d{2}[A-Z0-9]$');
+  return regex.hasMatch(normalized);
+}
 
   bool _isValidVehicleType() {
     return vehicleType.isNotEmpty;
@@ -112,7 +115,7 @@ class ParkingSpace {
 
   @override
   String toString() =>
-      '\nParkeringens id: $id, \nAdress: $address, \nPris: $pph kr per timme';
+      '\nParkeringens id: $id, \nAdress: $address, \nPris: $formattedPrice';
 
   bool isValid() {
     return _isValidId() && _isValidAddress() && _isValidPrice();
@@ -129,6 +132,15 @@ class ParkingSpace {
 
   bool _isValidPrice() {
     return pph > 0;
+  }
+
+  /// Getter som returnerar priset formaterat enligt dina regler.
+  String get formattedPrice {
+    if (pph == pph.floorToDouble()) {
+      return '${pph.toInt()}kr';
+    } else {
+      return '${pph.toStringAsFixed(1)}kr';
+    }
   }
 }
 

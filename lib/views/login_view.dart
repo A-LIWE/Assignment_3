@@ -40,9 +40,10 @@ class _LoginViewState extends State<LoginView> {
         // Användaren hittades, extrahera användarens id och navigera vidare
         final userData = response;
         final String userPersonalNumber = userData['personal_number'];
+        final String userName = userData ['name'];
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => HomeView(userPersonalNumber: userPersonalNumber)),
+          MaterialPageRoute(builder: (context) => HomeView(userPersonalNumber: userPersonalNumber, userName: userName)),
         );
       }
     } catch (error) {

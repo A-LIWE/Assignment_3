@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 class PersonRepository {
-  final String baseUrl = 'http://localhost:3000/api/persons';
+  final String baseUrl = 'http://10.0.2.2:3000/api/persons';
 
   Future<void> add(Person person) async {
     final Uri url = Uri.parse(baseUrl);
@@ -20,15 +20,18 @@ class PersonRepository {
         print('✅ Personen ${person.name} har lagts till.');
       } else if (response.statusCode == 409) {
         throw Exception(
-            '❌ Personen med personnummer ${person.personalNumber} finns redan i systemet.');
+          '❌ Personen med personnummer ${person.personalNumber} finns redan i systemet.',
+        );
       } else if (response.statusCode == 400) {
         throw Exception(
-            '❌ Ogiltiga data skickades. Kontrollera att alla fält är korrekt ifyllda.');
+          '❌ Ogiltiga data skickades. Kontrollera att alla fält är korrekt ifyllda.',
+        );
       } else if (response.statusCode == 500) {
         throw Exception('❌ Serverfel, försök igen senare.');
       } else {
         throw Exception(
-            '❌ Okänt fel: ${response.statusCode}, ${response.body}');
+          '❌ Okänt fel: ${response.statusCode}, ${response.body}',
+        );
       }
     } catch (e) {
       print('$e');
@@ -56,7 +59,8 @@ class PersonRepository {
       return null;
     } else {
       throw Exception(
-          'Kunde inte hämta person. Felkod: ${response.statusCode}, Svar: ${response.body}');
+        'Kunde inte hämta person. Felkod: ${response.statusCode}, Svar: ${response.body}',
+      );
     }
   }
 
@@ -80,12 +84,14 @@ class PersonRepository {
       print('✅ $name med personnummer $personalNumber har raderats.');
     } else if (response.statusCode == 404) {
       throw Exception(
-          '❌ Personen med personnummer $personalNumber hittades inte.');
+        '❌ Personen med personnummer $personalNumber hittades inte.',
+      );
     } else if (response.statusCode == 400) {
       throw Exception('❌ Ogiltigt personnummer: $personalNumber.');
     } else {
       throw Exception(
-          '❌ Misslyckades att radera person. Felkod: ${response.statusCode}');
+        '❌ Misslyckades att radera person. Felkod: ${response.statusCode}',
+      );
     }
   }
 }
@@ -106,18 +112,22 @@ class VehicleRepository {
 
       if (response.statusCode == 201) {
         print(
-            '✅ Fordon av typen ${vehicle.vehicleType} med registreringsnummer ${vehicle.registrationNumber} har lagts till.');
+          '✅ Fordon av typen ${vehicle.vehicleType} med registreringsnummer ${vehicle.registrationNumber} har lagts till.',
+        );
       } else if (response.statusCode == 409) {
         throw Exception(
-            '❌ Fordon med registreringsnummer ${vehicle.registrationNumber} finns redan i systemet.');
+          '❌ Fordon med registreringsnummer ${vehicle.registrationNumber} finns redan i systemet.',
+        );
       } else if (response.statusCode == 400) {
         throw Exception(
-            '❌ Ogiltiga data skickades. Kontrollera att alla fält är korrekt ifyllda.');
+          '❌ Ogiltiga data skickades. Kontrollera att alla fält är korrekt ifyllda.',
+        );
       } else if (response.statusCode == 500) {
         throw Exception('❌ Serverfel, försök igen senare.');
       } else {
         throw Exception(
-            '❌ Okänt fel: ${response.statusCode}, ${response.body}');
+          '❌ Okänt fel: ${response.statusCode}, ${response.body}',
+        );
       }
     } catch (e) {
       print('$e');
@@ -133,7 +143,8 @@ class VehicleRepository {
         return data.map((v) => Vehicle.fromJson(v)).toList();
       } else {
         throw Exception(
-            'Misslyckades att hämta fordon. Statuskod: ${response.statusCode}');
+          'Misslyckades att hämta fordon. Statuskod: ${response.statusCode}',
+        );
       }
     } catch (e) {
       throw Exception('Ett fel inträffade vid hämtning av fordon: $e');
@@ -149,7 +160,8 @@ class VehicleRepository {
       return null;
     } else {
       throw Exception(
-          'Kunde inte hämta fordon. Felkod: ${response.statusCode}, Svar: ${response.body}');
+        'Kunde inte hämta fordon. Felkod: ${response.statusCode}, Svar: ${response.body}',
+      );
     }
   }
 
@@ -163,37 +175,44 @@ class VehicleRepository {
 
     if (response.statusCode == 200) {
       print(
-          '✅ Fordonet med registreringsnummer ${updatedVehicle.registrationNumber} har uppdaterats.');
+        '✅ Fordonet med registreringsnummer ${updatedVehicle.registrationNumber} har uppdaterats.',
+      );
     } else if (response.statusCode == 404) {
       print(
-          '❌ Fordonet med registreringsnummer ${updatedVehicle.registrationNumber} hittades inte.');
+        '❌ Fordonet med registreringsnummer ${updatedVehicle.registrationNumber} hittades inte.',
+      );
     } else {
       print(
-          '❌ Misslyckades att uppdatera fordon. Felkod: ${response.statusCode}');
+        '❌ Misslyckades att uppdatera fordon. Felkod: ${response.statusCode}',
+      );
     }
   }
 
-  Future<void> delete(String registrationNumber) async {
-    final response =
-        await http.delete(Uri.parse('$baseUrl/$registrationNumber'));
+  Future<String> delete(String registrationNumber) async {
+    final response = await http.delete(
+      Uri.parse('$baseUrl/$registrationNumber'),
+    );
 
     if (response.statusCode == 200) {
       final Map<String, dynamic> data = jsonDecode(response.body);
       final vType = data['vehicleType'];
-      print('✅ $vType med registreringsnummer $registrationNumber har raderats.');
+      final message =
+          ('✅ $vType med registreringsnummer $registrationNumber har raderats.');
+      return message;
     } else if (response.statusCode == 404) {
       throw Exception('❌ Fordon med regnr $registrationNumber hittades inte.');
     } else if (response.statusCode == 400) {
       throw Exception('❌ Ogiltigt regnr: $registrationNumber.');
     } else {
       throw Exception(
-          '❌ Misslyckades att radera fordon. Felkod: ${response.statusCode}');
+        '❌ Misslyckades att radera fordon. Felkod: ${response.statusCode}',
+      );
     }
   }
 }
 
 class ParkingSpaceRepository {
-  final String baseUrl = 'http://localhost:3000/api/parking_spaces';
+  final String baseUrl = 'http://10.0.2.2:3000/api/parking_spaces';
 
   Future<void> add(ParkingSpace space) async {
     final Uri url = Uri.parse(baseUrl);
@@ -212,7 +231,8 @@ class ParkingSpaceRepository {
         throw Exception('❌ Parkeringsplats med ID ${space.id} finns redan.');
       } else {
         throw Exception(
-            '❌ Okänt fel: ${response.statusCode}, ${response.body}');
+          '❌ Okänt fel: ${response.statusCode}, ${response.body}',
+        );
       }
     } catch (e) {
       print('🚨 Fel vid tillägg av parkeringsplats: $e');
@@ -239,7 +259,8 @@ class ParkingSpaceRepository {
       return null;
     } else {
       throw Exception(
-          '❌ Misslyckades att hämta parkeringsplats. Felkod: ${response.statusCode}');
+        '❌ Misslyckades att hämta parkeringsplats. Felkod: ${response.statusCode}',
+      );
     }
   }
 
@@ -257,7 +278,8 @@ class ParkingSpaceRepository {
       print('❌ Parkeringsplatsen hittades inte.');
     } else {
       print(
-          '❌ Misslyckades att uppdatera parkeringsplats. Felkod: ${response.statusCode}');
+        '❌ Misslyckades att uppdatera parkeringsplats. Felkod: ${response.statusCode}',
+      );
     }
   }
 
@@ -270,13 +292,14 @@ class ParkingSpaceRepository {
       throw Exception('❌ Parkeringsplatsen hittades inte.');
     } else {
       throw Exception(
-          '❌ Misslyckades att radera parkeringsplats. Felkod: ${response.statusCode}');
+        '❌ Misslyckades att radera parkeringsplats. Felkod: ${response.statusCode}',
+      );
     }
   }
 }
 
 class ParkingSessionRepository {
-  final String baseUrl = 'http://localhost:3000/api/parking_sessions';
+  final String baseUrl = 'http://10.0.2.2:3000/api/parking_sessions';
 
   Future<void> add(ParkingSession parking) async {
     final Uri url = Uri.parse(baseUrl);
@@ -291,20 +314,21 @@ class ParkingSessionRepository {
 
       if (response.statusCode == 201) {
         print(
-            '\n✅ Parkering startad för ${parking.vehicle.vehicleType} med registreringsnummer: ${parking.vehicle.registrationNumber}.');
+          '\n✅ Parkering startad för ${parking.vehicle.vehicleType} med registreringsnummer: ${parking.vehicle.registrationNumber}.',
+        );
       } else if (response.statusCode == 400) {
-      
-      final Map<String, dynamic> errorData = jsonDecode(response.body);
-      final errorMessage = errorData['error'] ?? 'Okänt fel';
-      print('\n❌ $errorMessage');
-    } else {
-      throw Exception(
-          '❌ Misslyckades att starta parkering. Felkod: ${response.statusCode}, ${response.body}');
+        final Map<String, dynamic> errorData = jsonDecode(response.body);
+        final errorMessage = errorData['error'] ?? 'Okänt fel';
+        print('\n❌ $errorMessage');
+      } else {
+        throw Exception(
+          '❌ Misslyckades att starta parkering. Felkod: ${response.statusCode}, ${response.body}',
+        );
+      }
+    } catch (e) {
+      print('❌ Ett fel uppstod: $e');
     }
-  } catch (e) {
-    print('❌ Ett fel uppstod: $e');
   }
-}
 
   Future<List<ParkingSession>> getAll() async {
     final response = await http.get(Uri.parse(baseUrl));
@@ -318,7 +342,8 @@ class ParkingSessionRepository {
   }
 
   Future<ParkingSession?> getParkingByRegistrationN(
-      String registrationNumber) async {
+    String registrationNumber,
+  ) async {
     final response = await http.get(Uri.parse('$baseUrl/$registrationNumber'));
 
     if (response.statusCode == 200) {
@@ -327,7 +352,8 @@ class ParkingSessionRepository {
       return null;
     } else {
       throw Exception(
-          '❌ Misslyckades att hämta parkering. Felkod: ${response.statusCode}, Svar: ${response.body}');
+        '❌ Misslyckades att hämta parkering. Felkod: ${response.statusCode}, Svar: ${response.body}',
+      );
     }
   }
 
@@ -336,7 +362,7 @@ class ParkingSessionRepository {
     if (newEndTime != null) {
       payload['end_time'] = newEndTime.toIso8601String();
     }
-    
+
     final response = await http.put(
       Uri.parse('$baseUrl/$regNum'),
       headers: {'Content-Type': 'application/json'},
