@@ -4,25 +4,34 @@ import 'start_parking_view.dart';
 import 'manage_parkings_view.dart';
 
 class HomeView extends StatelessWidget {
-  const HomeView({super.key, required this.userPersonalNumber, required this.userName});
+  const HomeView({
+    super.key, 
+    required this.userPersonalNumber, 
+    required this.userName, 
+    required this.toggleTheme,
+  });
 
   final String userPersonalNumber;
   final String userName;
+  final VoidCallback toggleTheme;
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      theme: ThemeData(useMaterial3: true),
-      home: NavigationMenu(userPersonalNumber: userPersonalNumber, userName: userName,),
+
+    return NavigationMenu(
+      userPersonalNumber: userPersonalNumber,
+      userName: userName,
+      toggleTheme: toggleTheme,
     );
   }
 }
 
 class NavigationMenu extends StatefulWidget {
-  const NavigationMenu({super.key, required this.userPersonalNumber, required this.userName});
+  const NavigationMenu({super.key, required this.userPersonalNumber, required this.userName, required this.toggleTheme});
 
   final String userPersonalNumber;
   final String userName;
+  final VoidCallback toggleTheme;
 
   @override
   State<NavigationMenu> createState() => _NavigationMenuState();
@@ -63,7 +72,7 @@ class _NavigationMenuState extends State<NavigationMenu> {
       body: <Widget>[
         VehiclesView(userPersonalNumber: widget.userPersonalNumber, userName: widget.userName,),
         StartParkingView(userPersonalNumber: widget.userPersonalNumber, userName: widget.userName,),
-        const ManageParkingsView(),
+        ManageParkingsView(toggleTheme: widget.toggleTheme),
       ][currentPageIndex],
     );
   }

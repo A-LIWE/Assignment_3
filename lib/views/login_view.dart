@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:parking_user/main.dart';
 import 'package:parking_user/views/home_view.dart';
 import 'package:parking_user/views/registration_view.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -11,7 +12,8 @@ class LoginView extends StatefulWidget {
 }
 
 class _LoginViewState extends State<LoginView> {
-  final TextEditingController personalNumberController = TextEditingController();
+  final TextEditingController personalNumberController =
+      TextEditingController();
 
   Future<void> _login() async {
     final personalNumber = personalNumberController.text.trim();
@@ -23,33 +25,42 @@ class _LoginViewState extends State<LoginView> {
     }
 
     try {
-      final response = await Supabase.instance.client
-          .from('persons')
-          .select()
-          .eq('personal_number', personalNumber)
-          .maybeSingle();
+      final response =
+          await Supabase.instance.client
+              .from('persons')
+              .select()
+              .eq('personal_number', personalNumber)
+              .maybeSingle();
 
-          if (!mounted) return;
+      if (!mounted) return;
 
-      // Kontrollera om response är null eller tom (det vill säga, användaren finns inte)
+      // Kontrollera om användaren finns
       if (response == null || (response.isEmpty)) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Användare hittades inte")),
         );
       } else {
-        // Användaren hittades, extrahera användarens id och navigera vidare
+        // Användaren hittades, ta med användarens id och navigera vidare
         final userData = response;
         final String userPersonalNumber = userData['personal_number'];
-        final String userName = userData ['name'];
+        final String userName = userData['name'];
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => HomeView(userPersonalNumber: userPersonalNumber, userName: userName)),
+          MaterialPageRoute(
+            builder:
+                (context) => HomeView(
+                  userPersonalNumber:
+                      userPersonalNumber,
+                  userName: userName,
+                  toggleTheme: myAppKey.currentState!.toggleTheme,
+                ),
+          ),
         );
       }
     } catch (error) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Fel vid inloggning: $error")),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Fel vid inloggning: $error")));
     }
   }
 
@@ -57,7 +68,9 @@ class _LoginViewState extends State<LoginView> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text(('Välkommen till Sveriges\nbästa parkeringsapp...typ')),
+        title: const Text(
+          ('Välkommen till Sveriges\nbästa parkeringsapp...typ'),
+        ),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -72,17 +85,15 @@ class _LoginViewState extends State<LoginView> {
               ),
             ),
             const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: _login,
-              child: const Text('Logga in'),
-),
+            ElevatedButton(onPressed: _login, child: const Text('Logga in')),
             const SizedBox(height: 16),
-            // Navigering till registreringsvyn
             TextButton(
               onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const RegistrationView()),
+                  MaterialPageRoute(
+                    builder: (context) => const RegistrationView(),
+                  ),
                 );
               },
               child: const Text('Registrera dig'),

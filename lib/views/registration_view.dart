@@ -41,13 +41,12 @@ class _RegistrationViewState extends State<RegistrationView> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Registrering lyckades")),
       );
-      // Navigera tillbaka eller vidare, beroende på din logik
       Navigator.pop(context);
     }
   } catch (error) {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text("Fel vid registrering: $error"), duration: const Duration(seconds: 40),),
+      SnackBar(content: Text("Fel vid registrering: $error"), duration: const Duration(seconds: 4),),
       
     );
   }
@@ -64,7 +63,6 @@ class _RegistrationViewState extends State<RegistrationView> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // Namnfält
             TextField(
               controller: nameController,
               decoration: const InputDecoration(
@@ -73,7 +71,6 @@ class _RegistrationViewState extends State<RegistrationView> {
               ),
             ),
             const SizedBox(height: 16),
-            // Personnummerfält
             TextField(
               controller: personalNumberController,
               decoration: const InputDecoration(

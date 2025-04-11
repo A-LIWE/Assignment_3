@@ -124,7 +124,7 @@ class ParkingSpace {
     return pph > 0;
   }
 
-  /// Getter som returnerar priset formaterat enligt dina regler.
+  /// Getter som returnerar priset formaterat.
   String get formattedPrice {
     if (pph == pph.floorToDouble()) {
       return '${pph.toInt()}kr';

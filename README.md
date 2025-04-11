@@ -1,3 +1,5 @@
+Borde räcka med flutter pub get för att installera alla dependencies. Har ej någon .env fil. Min anon key till Supabase ligger direkt i main filen.
+
 # parking_user
 
 A new Flutter project.

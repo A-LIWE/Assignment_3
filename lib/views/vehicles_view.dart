@@ -34,9 +34,9 @@ class _VehiclesViewState extends State<VehiclesView> {
       isLoading = true;
     });
     try {
-      // Skapa en instans av VehicleRepository
       final vehicleRepo = VehicleRepository();
-      final data = await vehicleRepo.getAll(); // data är en lista med fordon
+      final data = await vehicleRepo.getAll(); 
+      
       // Filtrera fordon baserat på personnummer
       final filteredVehicles =
           data
@@ -90,7 +90,7 @@ class _VehiclesViewState extends State<VehiclesView> {
 
   Future<void> _addVehicle(BuildContext parentContext) async {
     String registrationNumber = "";
-    String? selectedVehicleType; // Detta kommer att uppdateras via dropdownen.
+    String? selectedVehicleType; 
     final List<String> vehicleTypes = ['Bil', 'Motorcykel', 'Moped', 'Buss'];
 
     final formKey = GlobalKey<FormState>();
@@ -161,30 +161,25 @@ class _VehiclesViewState extends State<VehiclesView> {
             ),
             ElevatedButton(
               onPressed: () async {
-                // Kontrollera att formuläret är giltigt innan vi går vidare
                 if (!formKey.currentState!.validate()) {
-                  // Om det inte är giltigt, visas felmeddelandena direkt i fälten
                   return;
                 }
                 Navigator.pop(dialogContext);
-                // Skapa ägaren med den inloggade användarens uppgifter
                 final owner = Person(
                   widget.userName,
                   widget.userPersonalNumber,
                 );
-                // Skapa ett nytt Vehicle-objekt med inmatade data
                 final newVehicle = Vehicle(
                   registrationNumber,
                   selectedVehicleType!,
                   owner,
                 );
-                // Anropa repository-metoden för att lägga till fordonet
                 final vehicleRepo = VehicleRepository();
                 try {
                   await vehicleRepo.add(newVehicle);
-                  _fetchVehicles(); // Uppdatera listan med fordon
+                  if (!mounted) return;
+                  _fetchVehicles();
                 } catch (error) {
-                  // Här visas felmeddelandet från repositoryt direkt
                   ScaffoldMessenger.of(
                     context,
                   ).showSnackBar(SnackBar(content: Text(error.toString())));

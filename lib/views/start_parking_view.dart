@@ -59,7 +59,7 @@ class _StartParkingViewState extends State<StartParkingView> {
     try {
       final vehicleRepo = VehicleRepository();
       final data = await vehicleRepo.getAll();
-      // Filtrera fordon baserat på personalnummer
+      // Filtrera fordon baserat på personnummer
       final filteredVehicles = data
           .where((v) => v.owner?.personalNumber == widget.userPersonalNumber)
           .toList();
@@ -84,7 +84,7 @@ class _StartParkingViewState extends State<StartParkingView> {
     });
   }
 
-  // Metod för att filtrera parkeringsplatser baserat på sökfråga (adress)
+  // sökfunktion, filtrerar på address
   void _filterParkingSpaces(String query) {
     setState(() {
       searchQuery = query;
@@ -105,9 +105,10 @@ class _StartParkingViewState extends State<StartParkingView> {
       );
       return;
     }
+
     final startTime = DateTime.now();
-    // Skapa en ny ParkingSession med vald parkeringsplats, valt fordon och aktuell tid
     final newSession = ParkingSession(selectedVehicle!, selectedSpace!, startTime);
+    
     try {
       await ParkingSessionRepository().add(newSession);
       if (!mounted) return;
@@ -141,7 +142,6 @@ class _StartParkingViewState extends State<StartParkingView> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Sökfält
                   TextField(
                     decoration: const InputDecoration(
                       labelText: "Sök på adress",
