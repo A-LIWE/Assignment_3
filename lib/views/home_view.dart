@@ -5,33 +5,32 @@ import 'manage_parkings_view.dart';
 
 class HomeView extends StatelessWidget {
   const HomeView({
-    super.key, 
-    required this.userPersonalNumber, 
-    required this.userName, 
-    required this.toggleTheme,
+    super.key,
+    required this.userPersonalNumber,
+    required this.userName,
   });
 
   final String userPersonalNumber;
   final String userName;
-  final VoidCallback toggleTheme;
 
   @override
   Widget build(BuildContext context) {
-
     return NavigationMenu(
       userPersonalNumber: userPersonalNumber,
       userName: userName,
-      toggleTheme: toggleTheme,
     );
   }
 }
 
 class NavigationMenu extends StatefulWidget {
-  const NavigationMenu({super.key, required this.userPersonalNumber, required this.userName, required this.toggleTheme});
+  const NavigationMenu({
+    super.key,
+    required this.userPersonalNumber,
+    required this.userName,
+  });
 
   final String userPersonalNumber;
   final String userName;
-  final VoidCallback toggleTheme;
 
   @override
   State<NavigationMenu> createState() => _NavigationMenuState();
@@ -69,11 +68,23 @@ class _NavigationMenuState extends State<NavigationMenu> {
           ),
         ],
       ),
-      body: <Widget>[
-        VehiclesView(userPersonalNumber: widget.userPersonalNumber, userName: widget.userName,),
-        StartParkingView(userPersonalNumber: widget.userPersonalNumber, userName: widget.userName,),
-        ManageParkingsView(toggleTheme: widget.toggleTheme),
-      ][currentPageIndex],
+      // IndexedStack gör att vyerna inte behövs laddas om varje gång, de behåller sitt state och behöver inte göra nya API anrop
+      body: IndexedStack(
+        index: currentPageIndex,
+        children: [
+          VehiclesView(
+            key: const PageStorageKey('vehicles_view'),
+            userPersonalNumber: widget.userPersonalNumber,
+            userName: widget.userName,
+          ),
+          StartParkingView(
+            key: const PageStorageKey('start_parking_view'),
+            userPersonalNumber: widget.userPersonalNumber,
+            userName: widget.userName,
+          ),
+          ManageParkingsView(key: const PageStorageKey('manage_parkings_view')),
+        ],
+      ),
     );
   }
 }

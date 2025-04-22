@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
-import 'login_view.dart';
+import 'package:parking_user/main.dart';
 import 'package:parking_user/models/models.dart';
 import 'package:parking_user/repositories/repositories.dart';
+import 'package:provider/provider.dart';
+import '../providers/auth_provider.dart';
 
 class ManageParkingsView extends StatefulWidget {
-  const ManageParkingsView({super.key, required this.toggleTheme});
-
-  final VoidCallback toggleTheme;
+  const ManageParkingsView({super.key});
 
   @override
   State<ManageParkingsView> createState() => _ManageParkingsViewState();
@@ -182,12 +182,7 @@ class _ManageParkingsViewState extends State<ManageParkingsView> {
                 Center(
                   child: ElevatedButton(
                     onPressed: () {
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const LoginView(),
-                        ),
-                      );
+                      context.read<AuthProvider>().logout();
                     },
                     child: const Text("Logga ut"),
                   ),
@@ -202,7 +197,7 @@ class _ManageParkingsViewState extends State<ManageParkingsView> {
             right: 16,
             child: IconButton(
               iconSize: 32,
-              onPressed: widget.toggleTheme,
+              onPressed: () => myAppKey.currentState?.toggleTheme(),
               icon: Icon(
                 Theme.of(context).brightness == Brightness.dark
                     ? Icons.wb_sunny

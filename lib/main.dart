@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:parking_user/providers/auth_provider.dart';
+import 'package:parking_user/views/auth_gate.dart';
+import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'views/login_view.dart';
 
 final GlobalKey<MyAppState> myAppKey = GlobalKey<MyAppState>();
 final supabase = Supabase.instance.client;
@@ -11,11 +13,16 @@ Future<void> main() async {
     anonKey:
         'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl3dm90ZXFjcm9oZ3VzamF3YXFnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDAxNDM3NjUsImV4cCI6MjA1NTcxOTc2NX0.3mnwht5XOgYNM6Zn5qK-qft_5FJZvTtP-13AggbUycw',
   );
-  runApp(MyApp(key: myAppKey));
+  runApp(
+    ChangeNotifierProvider(
+      create: (_) => AuthProvider(),
+      child: MyApp(key: myAppKey),
+    ),
+  );
 }
 
 class MyApp extends StatefulWidget {
-  const MyApp({super.key});
+  const MyApp({required super.key});
   
   @override
   MyAppState createState() => MyAppState();
@@ -51,7 +58,7 @@ class MyAppState extends State<MyApp> {
         useMaterial3: true,
       ),
       themeMode: _themeMode,
-      home: const LoginView(),
+      home: const AuthGate(),
     );
   }
 }
